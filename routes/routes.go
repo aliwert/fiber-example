@@ -9,6 +9,10 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api/v1")
 
+	auth := api.Group("/auth")
+	auth.Post("/register", handlers.Register)
+	auth.Post("/login", handlers.Login)
+
 	// Cars routes
 	cars := api.Group("/cars")
 	cars.Get("/", handlers.GetCars)

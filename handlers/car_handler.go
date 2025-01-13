@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"log"
+
 	"github.com/aliwert/fiber-example/database"
 	"github.com/aliwert/fiber-example/models"
 	"github.com/gofiber/fiber/v2"
@@ -45,19 +47,51 @@ func CreateCar(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Failed to parse request"})
 	}
 
-	query := `
-		INSERT INTO cars (brand, model, year, price)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at
-	`
-
-	err := database.DB.QueryRow(query, car.Brand, car.Model, car.Year, car.Price).
-		Scan(&car.ID, &car.CreatedAt)
-
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to create car"})
+	// Validate required fields
+	if car.Brand == "" || car.Model == "" || car.Year == 0 ||
+		car.Price == 0 || car.LicensePlate == "" || car.Color == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "Missing required fields",
+			"required_fields": []string{
+				"brand", "model", "year", "price", "license_plate", "color", "mileage",
+			},
+		})
 	}
 
+	query := `
+        INSERT INTO cars (brand, model, year, price, license_plate, color, mileage, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, brand, model, year, price, license_plate, color, mileage, status, created_at
+    `
+
+	err := database.DB.QueryRow(
+		query,
+		car.Brand,
+		car.Model,
+		car.Year,
+		car.Price,
+		car.LicensePlate,
+		car.Color,
+		car.Mileage,
+		car.Status,
+	).Scan(
+		&car.ID,
+		&car.Brand,
+		&car.Model,
+		&car.Year,
+		&car.Price,
+		&car.LicensePlate,
+		&car.Color,
+		&car.Mileage,
+		&car.Status,
+		&car.CreatedAt,
+	)
+
+	if err != nil {
+		// Log the actual error
+		log.Printf("Database error: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 	return c.Status(201).JSON(car)
 }
 
@@ -98,6 +132,5 @@ func DeleteCar(c *fiber.Ctx) error {
 	if rowsAffected == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Car not found"})
 	}
-
 	return c.SendStatus(204)
 }

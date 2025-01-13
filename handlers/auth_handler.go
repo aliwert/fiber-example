@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"os"
 	"time"
 
@@ -25,15 +26,17 @@ func Register(c *fiber.Ctx) error {
 
 	var user models.User
 	err = database.DB.QueryRow(`
-		INSERT INTO users (email, password, role)
-		VALUES ($1, $2, $3)
-		RETURNING id, email, role, created_at
-	`, req.Email, hashedPassword, "user").Scan(
+        INSERT INTO users (email, password, role)
+        VALUES ($1, $2, $3)
+        RETURNING id, email, role, created_at
+    `, req.Email, string(hashedPassword), "user").Scan(
 		&user.ID, &user.Email, &user.Role, &user.CreatedAt,
 	)
 
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to create user"})
+		// Log the actual error
+		log.Printf("Database error: %v", err)
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(201).JSON(user)

@@ -31,6 +31,27 @@ func Connect() error {
 
 	// Create cars table if it doesn't exist
 	createTablesQuery := `
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS cars (
+        id SERIAL PRIMARY KEY,
+        brand VARCHAR(100) NOT NULL,
+        model VARCHAR(100) NOT NULL,
+        year INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        license_plate VARCHAR(20) NOT NULL,
+        color VARCHAR(50) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Available',
+        mileage INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
     CREATE TABLE IF NOT EXISTS customers (
         id SERIAL PRIMARY KEY,
         first_name VARCHAR(100) NOT NULL,
@@ -61,8 +82,8 @@ func Connect() error {
         total_cost DECIMAL(10,2) NOT NULL,
         status VARCHAR(20) NOT NULL DEFAULT 'Active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-`
+    );`
+
 	_, err = DB.Exec(createTablesQuery)
 	if err != nil {
 		return err

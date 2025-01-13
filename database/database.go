@@ -29,7 +29,6 @@ func Connect() error {
 		return err
 	}
 
-	// Create cars table if it doesn't exist
 	createTablesQuery := `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
